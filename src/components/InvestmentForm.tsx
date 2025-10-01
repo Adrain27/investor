@@ -27,11 +27,47 @@ import { useState } from "react";
 const formSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
   email: z.string().trim().email("Invalid email address").max(255),
+  country: z.string().min(1, "Please select a country"),
   paymentMethod: z.string().min(1, "Please select a payment method"),
-  investmentReturnMethod: z.string().min(1, "Please select an investment return method"),
+  // Indian Bank Transfer fields
+  bankAccountName: z.string().optional(),
+  bankAccountNumber: z.string().optional(),
+  ifscCode: z.string().optional(),
+  // UPI field
+  upiId: z.string().optional(),
+  // Crypto wallet (for all crypto payments)
+  cryptoWallet: z.string().optional(),
+  investmentReturnMethod: z.string().optional(),
   agreedToTerms: z.boolean().refine((val) => val === true, {
     message: "You must agree to the terms and conditions",
   }),
+}).refine((data) => {
+  // Validate bank details for Indian bank transfer
+  if (data.country === "india" && data.paymentMethod === "bank_transfer") {
+    return data.bankAccountName && data.bankAccountNumber && data.ifscCode;
+  }
+  return true;
+}, {
+  message: "Please provide all bank account details",
+  path: ["bankAccountName"],
+}).refine((data) => {
+  // Validate UPI ID for Indian UPI payment
+  if (data.country === "india" && data.paymentMethod === "upi") {
+    return data.upiId && data.upiId.length > 0;
+  }
+  return true;
+}, {
+  message: "Please provide your UPI ID",
+  path: ["upiId"],
+}).refine((data) => {
+  // Validate crypto wallet for crypto payments
+  if (data.paymentMethod === "crypto") {
+    return data.cryptoWallet && data.cryptoWallet.length > 0;
+  }
+  return true;
+}, {
+  message: "Please provide your crypto wallet address",
+  path: ["cryptoWallet"],
 });
 
 export function InvestmentForm() {
@@ -43,11 +79,20 @@ export function InvestmentForm() {
     defaultValues: {
       name: "",
       email: "",
+      country: "",
       paymentMethod: "",
+      bankAccountName: "",
+      bankAccountNumber: "",
+      ifscCode: "",
+      upiId: "",
+      cryptoWallet: "",
       investmentReturnMethod: "",
       agreedToTerms: false,
     },
   });
+
+  const selectedCountry = form.watch("country");
+  const selectedPaymentMethod = form.watch("paymentMethod");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -121,21 +166,19 @@ export function InvestmentForm() {
 
           <FormField
             control={form.control}
-            name="paymentMethod"
+            name="country"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Payment Method</FormLabel>
+                <FormLabel>Country</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select payment method" />
+                      <SelectValue placeholder="Select your country" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="credit_card">Credit Card</SelectItem>
-                    <SelectItem value="paypal">PayPal</SelectItem>
-                    <SelectItem value="crypto">Cryptocurrency</SelectItem>
+                    <SelectItem value="india">India</SelectItem>
+                    <SelectItem value="other">Other Country</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -143,29 +186,159 @@ export function InvestmentForm() {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="investmentReturnMethod"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Investment Return Payment Method</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+          {selectedCountry && (
+            <FormField
+              control={form.control}
+              name="paymentMethod"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Payment Method</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select payment method" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {selectedCountry === "india" ? (
+                        <>
+                          <SelectItem value="bank_transfer">Bank Transfer (IMPS)</SelectItem>
+                          <SelectItem value="upi">UPI</SelectItem>
+                          <SelectItem value="crypto">Cryptocurrency</SelectItem>
+                        </>
+                      ) : (
+                        <>
+                          <SelectItem value="crypto">Cryptocurrency</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {selectedCountry === "other" && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Other payment methods will be available soon. Currently only crypto is supported.
+                    </p>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {selectedCountry === "india" && selectedPaymentMethod === "bank_transfer" && (
+            <>
+              <FormField
+                control={form.control}
+                name="bankAccountName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Account Holder Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter account holder name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="bankAccountNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Account Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter account number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ifscCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>IFSC Code</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter IFSC code" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
+
+          {selectedCountry === "india" && selectedPaymentMethod === "upi" && (
+            <FormField
+              control={form.control}
+              name="upiId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>UPI ID</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select return method" />
-                    </SelectTrigger>
+                    <Input placeholder="Enter your UPI ID (e.g., name@upi)" {...field} />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="paypal">PayPal</SelectItem>
-                    <SelectItem value="crypto">Cryptocurrency</SelectItem>
-                    <SelectItem value="reinvest">Reinvest</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {selectedPaymentMethod === "crypto" && (
+            <FormField
+              control={form.control}
+              name="cryptoWallet"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Crypto Wallet Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your wallet address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {selectedPaymentMethod && (
+            <FormField
+              control={form.control}
+              name="investmentReturnMethod"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Investment Return Payment Method (Optional)</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select return method (optional)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {selectedCountry === "india" ? (
+                        <>
+                          <SelectItem value="bank_transfer">Bank Transfer (IMPS)</SelectItem>
+                          <SelectItem value="upi">UPI</SelectItem>
+                          <SelectItem value="crypto">Cryptocurrency</SelectItem>
+                          <SelectItem value="same">Same as Payment Method</SelectItem>
+                        </>
+                      ) : (
+                        <>
+                          <SelectItem value="crypto">Cryptocurrency</SelectItem>
+                          <SelectItem value="same">Same as Payment Method</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    If not selected, returns will be sent via the same payment method you chose above.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <FormField
             control={form.control}
