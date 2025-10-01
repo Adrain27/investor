@@ -22,6 +22,7 @@ Deno.serve(async (req) => {
     const chatId = Deno.env.get('TELEGRAM_CHAT_ID');
 
     if (!botToken || !chatId) {
+      console.error('Missing Telegram configuration');
       throw new Error('Missing Telegram configuration');
     }
 
