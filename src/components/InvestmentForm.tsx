@@ -37,45 +37,12 @@ const formSchema = z.object({
   phoneNumber: z.string().trim().min(8, "Please enter a valid phone number with country code").max(20),
   country: z.string().min(1, "Please select a country"),
   paymentMethod: z.string().min(1, "Please select a payment method"),
-  // Indian Bank Transfer fields
-  bankAccountName: z.string().optional(),
-  bankAccountNumber: z.string().optional(),
-  ifscCode: z.string().optional(),
-  // UPI field
-  upiId: z.string().optional(),
-  // Crypto wallet (for all crypto payments)
-  cryptoWallet: z.string().optional(),
+  // Payment method confirmations
+  paymentDetailsConfirmed: z.string().optional(),
   investmentReturnMethod: z.string().optional(),
   agreedToTerms: z.boolean().refine((val) => val === true, {
     message: "You must agree to the terms and conditions",
   }),
-}).refine((data) => {
-  // Validate bank details for Indian bank transfer
-  if (data.country === "india" && data.paymentMethod === "bank_transfer") {
-    return data.bankAccountName && data.bankAccountNumber && data.ifscCode;
-  }
-  return true;
-}, {
-  message: "Please provide all bank account details",
-  path: ["bankAccountName"],
-}).refine((data) => {
-  // Validate UPI ID for Indian UPI payment
-  if (data.country === "india" && data.paymentMethod === "upi") {
-    return data.upiId && data.upiId.length > 0;
-  }
-  return true;
-}, {
-  message: "Please provide your UPI ID",
-  path: ["upiId"],
-}).refine((data) => {
-  // Validate crypto wallet for crypto payments
-  if (data.paymentMethod === "crypto") {
-    return data.cryptoWallet && data.cryptoWallet.length > 0;
-  }
-  return true;
-}, {
-  message: "Please provide your crypto wallet address",
-  path: ["cryptoWallet"],
 });
 
 export function InvestmentForm() {
@@ -93,11 +60,7 @@ export function InvestmentForm() {
       phoneNumber: "",
       country: "",
       paymentMethod: "",
-      bankAccountName: "",
-      bankAccountNumber: "",
-      ifscCode: "",
-      upiId: "",
-      cryptoWallet: "",
+      paymentDetailsConfirmed: "",
       investmentReturnMethod: "",
       agreedToTerms: false,
     },
@@ -269,78 +232,31 @@ export function InvestmentForm() {
             />
           )}
 
-          {selectedCountry === "india" && selectedPaymentMethod === "bank_transfer" && (
-            <>
-              <FormField
-                control={form.control}
-                name="bankAccountName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Account Holder Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter account holder name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="bankAccountNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Account Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter account number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="ifscCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>IFSC Code</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter IFSC code" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </>
-          )}
-
-          {selectedCountry === "india" && selectedPaymentMethod === "upi" && (
+          {selectedPaymentMethod && (
             <FormField
               control={form.control}
-              name="upiId"
+              name="paymentDetailsConfirmed"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>UPI ID</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your UPI ID (e.g., name@upi)" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
-          {selectedPaymentMethod === "crypto" && (
-            <FormField
-              control={form.control}
-              name="cryptoWallet"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Crypto Wallet Address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your wallet address" {...field} />
-                  </FormControl>
+                  <FormLabel>Do you have {
+                    selectedPaymentMethod === "bank_transfer" ? "Bank Transfer (IMPS)" :
+                    selectedPaymentMethod === "upi" ? "UPI" :
+                    "Cryptocurrency Wallet"
+                  } details ready?</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select option" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes, I have the details</SelectItem>
+                      <SelectItem value="will_provide">I will provide details later</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    You can provide the actual payment details via chat after submission.
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
