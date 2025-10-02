@@ -6,9 +6,13 @@ const corsHeaders = {
 interface FormData {
   name: string;
   email: string;
+  phoneNumber: string;
+  country: string;
   paymentMethod: string;
-  investmentReturnMethod: string;
+  paymentDetailsConfirmed?: string;
+  investmentReturnMethod?: string;
   agreedToTerms: boolean;
+  investorId: string;
 }
 
 Deno.serve(async (req) => {
@@ -31,9 +35,13 @@ Deno.serve(async (req) => {
 
 👤 Name: ${formData.name}
 📧 Email: ${formData.email}
+📱 Phone Number: ${formData.phoneNumber}
+🌍 Country: ${formData.country}
 💳 Payment Method: ${formData.paymentMethod}
-💰 Investment Return Method: ${formData.investmentReturnMethod}
+${formData.paymentDetailsConfirmed ? `✔️ Payment Details Ready: ${formData.paymentDetailsConfirmed === 'yes' ? 'Yes, details ready' : 'Will provide later'}` : ''}
+💰 Investment Return Method: ${formData.investmentReturnMethod || 'Not specified'}
 ✅ Terms Accepted: ${formData.agreedToTerms ? 'Yes' : 'No'}
+🆔 Investor ID: ${formData.investorId}
 
 Submitted at: ${new Date().toLocaleString()}
     `.trim();
