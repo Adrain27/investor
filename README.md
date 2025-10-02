@@ -1,73 +1,82 @@
-# Welcome to your Lovable project
+# Investor Form – Vite + React + Tailwind
 
-## Project info
+Fast, client-side rendered app built with Vite, React, TypeScript, Tailwind CSS, and shadcn-ui.
 
-**URL**: https://lovable.dev/projects/d30941a4-34bc-4c83-9734-90237d03e8e1
+## Tech stack
 
-## How can I edit this code?
+- Vite
+- React + TypeScript
+- Tailwind CSS + shadcn-ui
+- React Router
+- TanStack Query
 
-There are several ways of editing your application.
+## Local development
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/d30941a4-34bc-4c83-9734-90237d03e8e1) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Requirements: Node.js 18+ and npm.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+git clone <YOUR_REPO_URL>
+cd investor
+npm ci
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The dev server runs at `http://localhost:5173` by default.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Build
 
-**Use GitHub Codespaces**
+```sh
+npm run build
+npm run preview   # optional: serve the production build locally
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Build output is generated in the `dist/` directory.
 
-## What technologies are used for this project?
+## Deploy to Vercel (recommended)
 
-This project is built with:
+Vercel can deploy this project as a static build.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Option A: Deploy via GitHub (one‑click)
+1. Push this repo to GitHub.
+2. In Vercel, click "New Project" → "Import Git Repository" and choose your repo.
+3. Framework Preset: select "Vite".
+4. Build command: `npm run build`
+5. Output directory: `dist`
+6. Click Deploy.
 
-## How can I deploy this project?
+### Option B: Deploy via Vercel CLI
+```sh
+npm i -g vercel
+vercel login
+# From project root
+vercel --prod
+```
 
-Simply open [Lovable](https://lovable.dev/projects/d30941a4-34bc-4c83-9734-90237d03e8e1) and click on Share -> Publish.
+When prompted:
+- Framework preset: Vite
+- Build command: `npm run build`
+- Output directory: `dist`
 
-## Can I connect a custom domain to my Lovable project?
+### SPA routing (client‑side routing)
+This is a React Router SPA. With the Vite preset, Vercel automatically serves the SPA fallback so deep links like `/terms` work. If you prefer to be explicit, create a `vercel.json` with this rewrite:
 
-Yes, you can!
+```json
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Environment variables
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+If you add any environment variables (e.g., API keys), set them in Vercel under Project → Settings → Environment Variables, and in local development via a `.env` file. Vite exposes variables prefixed with `VITE_` to the client.
+
+## Useful scripts
+
+- `npm run dev` – start local dev server
+- `npm run build` – create production build
+- `npm run preview` – preview built app
+
+## Notes
+
+- The project uses class-based dark mode (`.dark`) with a theme toggle.
+- The build output is static; no server is required.

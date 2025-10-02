@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, Lock, Copy, Check } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +52,18 @@ export function InvestmentForm() {
   const [investorId, setInvestorId] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
+  const [termsTapCount, setTermsTapCount] = useState(0);
+  const navigate = useNavigate();
+
+  const handleTermsClick = () => {
+    const nextCount = termsTapCount + 1;
+    if (nextCount >= 3) {
+      setTermsTapCount(0);
+      navigate("/terms");
+    } else {
+      setTermsTapCount(nextCount);
+    }
+  };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -314,7 +327,15 @@ export function InvestmentForm() {
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel>
-                    I agree to the terms and conditions
+                    I agree to the{" "}
+                    <button
+                      type="button"
+                      onClick={handleTermsClick}
+                      className="underline underline-offset-4 hover:text-primary"
+                      aria-label="Open terms and conditions"
+                    >
+                      terms and conditions
+                    </button>
                   </FormLabel>
                   <p className="text-sm text-muted-foreground">
                     By checking this box, you agree to our terms of service and privacy policy.
